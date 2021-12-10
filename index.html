@@ -54,8 +54,9 @@
 		</div>
 		<div id="info"> 等待 Dicom... </div>
 		<div id="size"></div>
+		<div><img id="img"></div>
 		<div> 
-			<input type="text" placeholder="檔名_長_寬_高" id="file-name"> 
+			<input style="width:500px" type="text" placeholder="檔名_長_寬_高_uint<位元>" id="file-name"> 
 		</div>
 		<div>
 			<a 
@@ -86,7 +87,7 @@
 				 * 設為 null 代表不檢查
 				*/
 				null,
-				function(){
+				function() {
 					/**
 					 * Dicom2Raw 的 build 方法
 					 * 將對 dicom  系列的圖像進行整理和組織
@@ -97,9 +98,70 @@
 					
 					var dimension = dicom2Raw.getDim();
 					document.getElementById('size').innerText = '尺寸: ' + dimension.x + ' x ' + dimension.y + ' x ' + dimension.z;
+					
+					//Show image
+					// var arrayBuffer = dicom2Raw.getImagePixel(13); 
+					// arrayBuffer = new Uint8Array(arrayBuffer);
+					// console.log(arrayBuffer[0]);
+
+					// var img = document.getElementById('img');
+
+					// function toBase64(arr) {
+					// 	arr = new Uint8Array(arr) //if it's an ArrayBuffer
+					// 	return btoa(
+					// 		arr.reduce((data, byte) => data + String.fromCharCode(byte), '')
+					// 	);
+					// }
+					// img.src = "data:image/png;base64," + arrayBuffer;
+					// console.log(img);
+
+					//Download
+					dicom2Raw.concatnate(function(){
+						document.getElementById('download-button').setAttribute('class', 'my-btn allow');
+						
+						document.getElementById('info').innerText = '轉換完成';
+
+						document.getElementById('download-button').addEventListener('click', function(){
+							var filename = document.getElementById('file-name').value;
+
+							Dicom2Raw.downloadData(
+								filename + '.raw',
+								dicom2Raw.rawData
+							);
+						});
+					});
 				}
 			);
-		};
+		}
+
+		// public method for encoding an Uint8Array to base64
+		function encode (input) {
+			var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+			var output = "";
+			var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+			var i = 0;
+
+			while (i < input.length) {
+				chr1 = input[i++];
+				chr2 = i < input.length ? input[i++] : Number.NaN; // Not sure if the index 
+				chr3 = i < input.length ? input[i++] : Number.NaN; // checks are needed here
+
+				enc1 = chr1 >> 2;
+				enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+				enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+				enc4 = chr3 & 63;
+
+				if (isNaN(chr2)) {
+					enc3 = enc4 = 64;
+				} else if (isNaN(chr3)) {
+					enc4 = 64;
+				}
+				output += keyStr.charAt(enc1) + keyStr.charAt(enc2) +
+						keyStr.charAt(enc3) + keyStr.charAt(enc4);
+			}
+			return output;
+		}
+
 
 		/**
 		 * 頁面加載完成時，
@@ -142,11 +204,11 @@
 			 * 自評表 QAQ
 			 * 有做到再勾阿!!
 			*/
-			var so = new ScoreOutputer("你的學號");
+			var so = new ScoreOutputer("110598068");
 			so.installCSS(function(){
 				so.addChild("成功讀取範例程式所附的 DICOM 檔案", 6, true);
-				so.addChild("轉換 DICOM 序列為 RAW 檔案", 1, false);
-				so.addChild("成功下載轉換好的 RAW 檔案", 1, false);
+				so.addChild("轉換 DICOM 序列為 RAW 檔案", 1, true);
+				so.addChild("成功下載轉換好的 RAW 檔案", 1, true);
 				so.addChild("可下載 8 bit 或 16 bit 的 RAW 檔案", 1, false);
 				so.addChild("在網頁中顯示中間的圖像", 1, false);
 				
